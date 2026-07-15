@@ -8,7 +8,8 @@ export type CartAction =
   | { type: "ADD_TO_CART"; payload: Product }
   | { type: "REMOVE_FROM_CART"; payload: number }
   | { type: "INCREASE_QUANTITY"; payload: number }
-  | { type: "DECREASE_QUANTITY"; payload: number };
+  | { type: "DECREASE_QUANTITY"; payload: number }
+  | { type: "LOAD_CART"; payload: CartItem[] };
 
 export const cartReducer = (
   state: CartItem[],
@@ -66,6 +67,9 @@ export const cartReducer = (
             : item
         )
         .filter((item) => item.quantity > 0);
+
+    case "LOAD_CART":
+      return action.payload;
 
     default:
       return state;

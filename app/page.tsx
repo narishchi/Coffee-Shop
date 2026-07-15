@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useReducer,
-  useCallback,
-  useEffect,
-} from "react";
+import { useState, useMemo } from "react";
 import {
   Container,
   Typography,
@@ -16,9 +11,9 @@ import {
   Button,
 } from "@mui/material";
 import ProductCard, { Product } from "./components/ProductCard";
-import { cartReducer, CartItem } from "./reducers/cartReducer";
 import Cart from "./components/Cart";
 import Link from "next/link";
+import { useCartContext } from "./context/CartContext";
 
 const products: Product[] = [
   {
@@ -69,51 +64,20 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
 
-  const [cart, dispatch] = useReducer(
-  cartReducer,
-  [] as CartItem[]
-  );
+  const { cart, dispatch, addToCart } = useCartContext();
 
-  useEffect(() => {
-  const savedCart = localStorage.getItem("cart");
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchSearch = product.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
-  if (savedCart) {
-    const items: CartItem[] = JSON.parse(savedCart);
+      const matchCategory =
+        category === "All" || product.category === category;
 
-    items.forEach((item) => {
-      for (let i = 0; i < item.quantity; i++) {
-        dispatch({
-          type: "ADD_TO_CART",
-          payload: item,
-        });
-      }
+      return matchSearch && matchCategory;
     });
-  }
-}, []);
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-    }, [cart]);
-
-  const addToCart = useCallback(
-  (product: Product) => {
-    dispatch({
-      type: "ADD_TO_CART",
-      payload: product,
-    });
-  },
-  []
-);
-
-  const filteredProducts = products.filter((product) => {
-    const matchSearch = product.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-
-    const matchCategory =
-      category === "All" || product.category === category;
-
-    return matchSearch && matchCategory;
-  });
+  }, [search, category]);
 
   return (
     <Container sx={{ py: 5 }}>

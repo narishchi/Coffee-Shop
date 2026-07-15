@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Container,
   Typography,
@@ -11,26 +11,10 @@ import {
   Button,
 } from "@mui/material";
 import Link from "next/link";
-
-type CartItem = {
-  id: number;
-  name: string;
-  price: number;
-  category: string;
-  image: string;
-  quantity: number;
-};
+import { useCartContext } from "../context/CartContext";
 
 export default function CartPage() {
-  const [cart, setCart] = useState<CartItem[]>([]);
-
-  useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
-    }
-  }, []);
+  const { cart } = useCartContext();
 
   const totalPrice = useMemo(() => {
     return cart.reduce(

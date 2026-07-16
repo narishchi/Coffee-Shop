@@ -164,6 +164,10 @@ case "ADD_TO_CART":
 - เขียนโค้ดมากกว่า useState
 - ผู้เริ่มต้นอาจเข้าใจยากกว่า
 
+
+---
+
+# 673450206-5 irada
 # HOOK ที่รับผิดชอบ
 
 โปรเจกต์ Coffee Shop Ordering System มีการใช้งาน React Hooks หลายชนิด โดย Hook ที่รับผิดชอบคือ `useMemo` และ `useCallback`

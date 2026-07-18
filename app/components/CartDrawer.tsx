@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import { CartItem } from "../reducers/cartReducer";
+import { brandColors } from "../theme";
 
 type CartDrawerProps = {
   open: boolean;
@@ -47,20 +48,38 @@ export default function CartDrawer({
 }: CartDrawerProps) {
   return (
     <>
-      {/* ปุ่มตะกร้าลอย เปิดป๊อปอัพ */}
+      {/* ปุ่มตะกร้าลอย เปิดป๊อปอัพ — ใช้สีกลาง (caramel) ตัดกับพื้นหลังเข้ม (espresso) ของหน้าเว็บ ไม่ให้กลืนไปกับพื้นหลัง */}
       <Fab
-        color="primary"
+        variant="extended"
         onClick={onOpen}
         sx={{
           position: "fixed",
           bottom: 24,
           right: 24,
           zIndex: 1200,
+          bgcolor: brandColors.caramel,
+          color: brandColors.cream,
+          fontWeight: 700,
+          px: 3,
+          boxShadow: "0 10px 26px rgba(0,0,0,0.45)",
+          "&:hover": {
+            bgcolor: brandColors.espressoDark,
+          },
         }}
       >
-        <Badge badgeContent={totalCount} color="error">
+        <Badge
+          badgeContent={totalCount}
+          sx={{
+            mr: 1.5,
+            "& .MuiBadge-badge": {
+              bgcolor: brandColors.espresso,
+              color: brandColors.cream,
+            },
+          }}
+        >
           🛒
         </Badge>
+        ตะกร้า
       </Fab>
 
       <Drawer anchor="right" open={open} onClose={onClose}>
@@ -77,7 +96,9 @@ export default function CartDrawer({
             direction="row"
             sx={{ mb: 2, justifyContent: "space-between", alignItems: "center" }}
           >
-            <Typography variant="h5">🛒 ตะกร้าสินค้า</Typography>
+            <Typography variant="h5" sx={{ color: "primary.dark" }}>
+              🛒 ตะกร้าสินค้า
+            </Typography>
             <IconButton onClick={onClose}>✕</IconButton>
           </Stack>
 
@@ -147,12 +168,12 @@ export default function CartDrawer({
               component={Link}
               href="/cart"
               variant="contained"
-              color="success"
+              color="secondary"
               fullWidth
               disabled={cart.length === 0}
               onClick={onClose}
             >
-              ชำระเงิน 
+              ชำระเงิน
             </Button>
           </Box>
         </Box>

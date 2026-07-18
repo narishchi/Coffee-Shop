@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import { useCartContext } from "../context/CartContext";
+import { brandColors } from "../theme";
 
 export default function CartPage() {
   const { cart } = useCartContext();
@@ -31,6 +32,7 @@ export default function CartPage() {
         fontWeight: "bold",
         textAlign: "center",
         mb: 4,
+        color: brandColors.cream,
         }}
         >
         🛒 สรุปคำสั่งซื้อ
@@ -38,7 +40,7 @@ export default function CartPage() {
       </Typography>
 
       {cart.length === 0 ? (
-        <Typography align="center">
+        <Typography align="center" sx={{ color: "rgba(241,231,213,0.8)" }}>
           ตะกร้าสินค้าว่างเปล่า
         </Typography>
       ) : (
@@ -83,13 +85,14 @@ export default function CartPage() {
             </Card>
           ))}
 
-          <Divider sx={{ my: 3 }} />
+          <Divider sx={{ my: 3, borderColor: "rgba(241,231,213,0.25)" }} />
 
           <Typography
             variant="h4"
             sx={{
             textAlign: "right",
             fontWeight: "bold",
+            color: brandColors.cream,
          }}
        >
             Total : ฿{totalPrice}
@@ -108,6 +111,11 @@ export default function CartPage() {
           component={Link}
           href="/"
           variant="contained"
+          sx={{
+            bgcolor: brandColors.cream,
+            color: brandColors.espresso,
+            "&:hover": { bgcolor: "#E4D5B8" },
+          }}
         >
           กลับไปหน้าหลัก
         </Button>

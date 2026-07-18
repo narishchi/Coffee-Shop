@@ -1,13 +1,8 @@
 "use client";
 
 import { memo } from "react";
-import {
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Button,
-} from "@mui/material";
+import { Card, CardContent, CardMedia, Typography, Button, Chip, Stack } from "@mui/material";
+import { brandColors } from "../theme";
 
 export type Product = {
   id: number;
@@ -35,8 +30,9 @@ ProductCardProps) {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        borderRadius: 3,
+        borderRadius: "14px",
         boxShadow: 3,
+        overflow: "hidden",
         transition: "0.3s",
         "&:hover": {
           transform: "translateY(-5px)",
@@ -46,10 +42,10 @@ ProductCardProps) {
     >
       <CardMedia
         component="img"
-        image={product.image}
+        image={`/${product.image}`}
         alt={product.name}
         sx={{
-          height: 220,
+          height: 160,
           objectFit: "cover",
         }}
       />
@@ -59,8 +55,17 @@ ProductCardProps) {
           flexGrow: 1,
           display: "flex",
           flexDirection: "column",
+          p: 2,
+          "&:last-child": { pb: 2 },
         }}
       >
+        <Chip
+          label={product.category}
+          size="small"
+          variant="outlined"
+          sx={{ alignSelf: "flex-start", mb: 1 }}
+        />
+
         <Typography
             variant="h6"
             sx={{
@@ -70,25 +75,35 @@ ProductCardProps) {
           {product.name}
         </Typography>
 
-        <Typography color="text.secondary">
-          {product.category}
-        </Typography>
-
-        <Typography
-          variant="h6"
-          color="primary"
-          sx={{ mt: 1 }}
+        <Stack
+          direction="row"
+          sx={{
+            mt: "auto",
+            pt: 2,
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
         >
-          ฿{product.price}
-        </Typography>
+          <Typography
+            sx={{ color: brandColors.caramelDark, fontWeight: 800 }}
+          >
+            ฿{product.price}
+          </Typography>
 
-        <Button
-          variant="contained"
-          sx={{ mt: "auto" }}
-          onClick={() => onAddToCart(product)}
-        >
-          Add to Cart
-        </Button>
+          <Button
+            variant="contained"
+            size="small"
+            sx={{
+              bgcolor: brandColors.espresso,
+              color: brandColors.cream,
+              px: 2.5,
+              "&:hover": { bgcolor: "#210F05" },
+            }}
+            onClick={() => onAddToCart(product)}
+          >
+            Add
+          </Button>
+        </Stack>
       </CardContent>
     </Card>
   );

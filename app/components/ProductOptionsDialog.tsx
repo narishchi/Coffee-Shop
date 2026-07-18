@@ -13,7 +13,6 @@ import {
   FormControlLabel,
   RadioGroup,
   Radio,
-  Box,
   Divider,
 } from "@mui/material";
 import { Product, DEFAULT_PRODUCT_PRICE } from "./ProductCard";

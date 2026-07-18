@@ -21,7 +21,7 @@ import { CartOptions } from "./reducers/cartReducer";
 import { brandColors } from "./theme";
 
 const products: Product[] = [
-  { id: 1, name: "Cappuccino", price: 65, category: "Coffee", image: "cappu.jpg" },
+  { id: 1, name: "Cappuccino", price: 65, category: "Coffee", image: "kapu.jpg" },
   { id: 2, name: "Latte", price: 75, category: "Coffee", image: "lattee.jpg" },
   { id: 3, name: "Green Tea", price: 60, category: "Tea", image: "Gtea.jpg" },
   { id: 4, name: "Thai Tea", price: 65, category: "Tea", image: "thaitea.jpg" },
@@ -118,7 +118,7 @@ export default function Home() {
 
         <Box
           component="img"
-          src="/coffee-hero.png"
+          src="/สีน้ำตาล.png"
           alt="แก้วกาแฟลาเต้อาร์ต"
           sx={{
             width: { xs: 220, sm: 230, md: 250 },

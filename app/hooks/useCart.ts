@@ -72,6 +72,10 @@ export function useCart() {
     dispatch({ type: "REMOVE_FROM_CART", payload: cartItemId });
   }, []);
 
+  const clearCart = useCallback(() => {
+    dispatch({ type: "CLEAR_CART" });
+  }, []);
+
   const dismissWarning = useCallback(() => setWarning(null), []);
 
   const totalPrice = useMemo(
@@ -91,6 +95,7 @@ export function useCart() {
     increaseQuantity,
     decreaseQuantity,
     removeFromCart,
+    clearCart,
     warning,
     dismissWarning,
     totalPrice,

@@ -28,7 +28,8 @@ export type CartAction =
   | { type: "REMOVE_FROM_CART"; payload: string }
   | { type: "INCREASE_QUANTITY"; payload: string }
   | { type: "DECREASE_QUANTITY"; payload: string }
-  | { type: "LOAD_CART"; payload: CartItem[] };
+  | { type: "LOAD_CART"; payload: CartItem[] }
+  | { type: "CLEAR_CART" };
 
 export const cartReducer = (
   state: CartItem[],
@@ -67,6 +68,10 @@ export const cartReducer = (
         },
       ];
     }
+    
+    case "CLEAR_CART":
+      return [];
+
 
     case "REMOVE_FROM_CART":
       return state.filter((item) => item.cartItemId !== action.payload);

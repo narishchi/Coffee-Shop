@@ -10,12 +10,15 @@ import {
   Box,
   Button,
 } from "@mui/material";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCartContext } from "../context/CartContext";
 import { brandColors } from "../theme";
 
 export default function CartPage() {
-  const { cart } = useCartContext();
+
+  
+  const { cart, clearCart } = useCartContext();
+  const router = useRouter();
 
   const totalPrice = useMemo(() => {
     return cart.reduce(
@@ -23,6 +26,13 @@ export default function CartPage() {
       0
     );
   }, [cart]);
+
+  const handleBackToHome = () => {
+    clearCart();
+    router.push("/");
+  };
+
+  
 
   return (
     <Container sx={{ py: 5 }}>
@@ -108,8 +118,7 @@ export default function CartPage() {
         }}
       >
         <Button
-          component={Link}
-          href="/"
+          onClick={handleBackToHome}
           variant="contained"
           sx={{
             bgcolor: brandColors.cream,

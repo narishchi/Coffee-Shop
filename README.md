@@ -176,7 +176,7 @@ case "ADD_TO_CART": {
 # 673450206-5 irada
 # HOOK ที่รับผิดชอบ
 
- `useMemo` และ `useCallback`
+ `useMemo`, `useCallback`, `useContext` และ Custom Hook (`useCart`)
 
 ---
 
@@ -309,41 +309,182 @@ const addToCart = useCallback(
 
 ---
 
-# คำถามอภิปรายท้ายใบงาน
+# 6. useContext
 
-## 1. เหตุใดจึงเลือกใช้ useReducer แทน useState ในการจัดการตะกร้าสินค้า
+## หลักการทำงาน
 
-ใช้ useReducer เพราะตะกร้าสินค้ามีหลายการทำงาน เช่น เพิ่มสินค้า ลบสินค้า เพิ่มจำนวน และลดจำนวน แต่ละอย่างมีเงื่อนไขในการเปลี่ยนข้อมูลที่แตกต่างกัน
+useContext ใช้สำหรับส่งข้อมูลหรือฟังก์ชันจาก Component แม่ ไปให้ Component ลูกที่อยู่ลึกหลายชั้นได้โดยตรง โดยไม่ต้องส่งผ่าน Props ทีละชั้น (ไม่ต้องทำ Props Drilling)
 
-ถ้าใช้ useState อาจต้องเขียนฟังก์ชันจัดการหลายส่วนภายใน Component ทำให้โค้ดยาวและดูแลยาก แต่ useReducer ช่วยรวม Logic ของตะกร้าไว้ที่เดียว โดยใช้ Action เป็นตัวกำหนดว่าต้องการเปลี่ยนข้อมูลแบบไหน ทำให้โค้ดเป็นระเบียบมากขึ้น
-
----
-
-## 2. useMemo ช่วยเพิ่มประสิทธิภาพของระบบอย่างไร
-
-useMemo ลดการคำนวณที่ไม่จำเป็น โดยจะเก็บผลลัพธ์เดิมไว้ และคำนวณใหม่เมื่อข้อมูลที่เกี่ยวข้องเปลี่ยนแปลง
-
-โปรเจกต์นี้ใช้ useMemo สำหรับคำนวณราคารวมของสินค้าในตะกร้า และใช้กรองรายการสินค้าในหน้าเมนู
-
-ถ้าไม่มี useMemo ทุกครั้งที่ Component Render ระบบต้องคำนวณข้อมูลใหม่ทั้งหมด ถึงแม้ว่าข้อมูลเดิมจะยังไม่เปลี่ยน ทำให้เกิดการทำงานที่ไม่จำเป็น
+ต้องมี `createContext` เพื่อสร้าง Context ขึ้นมาก่อน แล้วห่อ Component ที่ต้องการแชร์ข้อมูลด้วย `<Context.Provider value={...}>` จากนั้น Component ลูกเรียกใช้ผ่าน `useContext(Context)`
 
 ---
 
-## 3. useCallback มีประโยชน์ในสถานการณ์ใด และหากไม่ใช้จะเกิดผลอย่างไร
+## ตัวอย่างโค้ด
 
-useCallback เหมาะกับกรณีที่ต้องส่งฟังก์ชันไปให้ Component อื่นผ่าน Props โดยเฉพาะ Component ที่มีการใช้ React.memo
+### สร้าง Context (`app/context/CartContext.tsx`)
 
-โปรเจกต์นี้ใช้กับฟังก์ชัน `addToCart` ที่ส่งไปให้ `ProductCard` ใช้เพิ่มสินค้าเข้าตะกร้า
+```tsx
+const CartContext = createContext<CartContextValue | undefined>(undefined);
 
-ถ้าไม่ใช้ useCallback ทุกครั้งที่ Component หลัก Render ฟังก์ชันจะถูกสร้างใหม่ ทำให้ Props เปลี่ยน และอาจทำให้ Component ลูก Render ใหม่โดยไม่จำเป็น
+export function CartProvider({ children }: { children: ReactNode }) {
+  const cartValue = useCart();
+
+  return (
+    <CartContext.Provider value={cartValue}>{children}</CartContext.Provider>
+  );
+}
+
+export function useCartContext() {
+  const context = useContext(CartContext);
+
+  if (!context) {
+    throw new Error("useCartContext ต้องถูกเรียกใช้ภายใน <CartProvider>");
+  }
+
+  return context;
+}
+```
+
+### ห่อทั้งแอปด้วย Provider (`app/layout.tsx`)
+
+```tsx
+<CartProvider>{children}</CartProvider>
+```
+
+### เรียกใช้ข้อมูลตะกร้าจากหน้าไหนก็ได้
+
+```tsx
+const { cart, addToCart, totalPrice } = useCartContext();
+```
+
+หน้า `page.tsx` (หน้าเมนู) และ `cart/page.tsx` (หน้าสรุปคำสั่งซื้อ) ต่างก็เรียก `useCartContext()` ตัวเดียวกัน โดยไม่ต้องส่ง state ตะกร้าผ่าน Props ข้ามหน้าเลย
 
 ---
 
-## 4. เปรียบเทียบการใช้ useContext กับการส่งข้อมูลผ่าน Props (Props Drilling)
+## เหตุผลที่เลือกใช้
 
-การส่งข้อมูลแบบ Props คือการส่งข้อมูลจาก Component แม่ไปยัง Component ลูก หากมีหลายระดับจะต้องส่งผ่าน Component ที่ไม่ได้ใช้งานข้อมูลนั้น ทำให้โค้ดจัดการยากขึ้น
+ข้อมูลตะกร้าสินค้าต้องถูกใช้ในหลายหน้า (หน้าเมนู, ป้าย badge จำนวนสินค้า, หน้าสรุปคำสั่งซื้อ) ถ้าส่งผ่าน Props จะต้องส่งลึกหลายชั้นและซับซ้อนขึ้นเรื่อยๆ เมื่อโปรเจกต์ใหญ่ขึ้น จึงใช้ useContext รวมกับ Custom Hook (`useCart`) เพื่อให้ทุก Component เข้าถึง state และฟังก์ชันจัดการตะกร้าชุดเดียวกันได้โดยตรง
 
-ส่วน useContext ช่วยให้ Component ต่าง ๆ สามารถเข้าถึงข้อมูลร่วมกันได้โดยตรง โดยไม่ต้องส่ง Props หลายระดับ
+---
 
-โปรเจกต์นี้ใช้ `CartContext` แชร์ข้อมูลตะกร้าสินค้า ทำให้หน้าเมนูและหน้าสรุปราคาสามารถใช้ข้อมูล `cart` ร่วมกันได้ง่ายขึ้น ลดความซับซ้อนของการส่งข้อมูลระหว่าง Component
+## ข้อดี
 
+- ไม่ต้องทำ Props Drilling ส่งข้อมูลผ่านหลายชั้น
+- ทุก Component ที่อยู่ภายใน Provider เข้าถึงข้อมูลชุดเดียวกันได้ ข้อมูล sync กันอัตโนมัติ
+- แยก Logic การจัดการตะกร้าออกจาก UI ทำให้โค้ดอ่านง่ายขึ้น
+
+---
+
+## ข้อจำกัด
+
+- ถ้า value ใน Context เปลี่ยนบ่อย Component ลูกที่ใช้ useContext จะ re-render ทุกครั้งที่ค่าเปลี่ยน แม้จะใช้แค่บางส่วนของ value ก็ตาม
+- ถ้าเรียก `useCartContext()` นอก `<CartProvider>` จะ throw error ทันที ต้องระวังตอนวาง Provider ให้ครอบคลุมทุกหน้าที่ต้องใช้
+
+
+---
+
+# 7. Custom Hook: useCart
+
+## หลักการทำงาน
+
+Custom Hook คือฟังก์ชันที่ขึ้นต้นด้วย `use` และรวม Hook อื่นๆ (useState, useEffect, useReducer, useCallback, useMemo) ไว้ด้วยกัน เพื่อดึง Logic ที่ซับซ้อนออกจาก Component ไปไว้ในที่เดียว แล้วเรียกใช้ซ้ำได้จากหลายที่
+
+---
+
+## ตัวอย่างโค้ด
+
+```tsx
+export function useCart() {
+  const [cart, dispatch] = useReducer(cartReducer, [] as CartItem[]);
+  const [warning, setWarning] = useState<string | null>(null);
+
+  // โหลด cart จาก localStorage ตอน mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+    if (savedCart) {
+      dispatch({ type: "LOAD_CART", payload: JSON.parse(savedCart) });
+    }
+  }, []);
+
+  // sync cart ลง localStorage ทุกครั้งที่ cart เปลี่ยน
+  useEffect(() => {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  }, [cart]);
+
+  // addToCart, increaseQuantity, decreaseQuantity, removeFromCart, clearCart
+  // ทุกตัวเป็น useCallback ทั้งหมด
+  // totalPrice, totalCount เป็น useMemo
+
+  return { cart, addToCart, increaseQuantity, decreaseQuantity,
+           removeFromCart, clearCart, warning, dismissWarning,
+           totalPrice, totalCount };
+}
+```
+
+`useCart` ถูกเรียกใช้เพียงครั้งเดียวใน `CartProvider` (`app/context/CartContext.tsx`) แล้วส่งค่าที่ return ออกมาทั้งหมดเข้าไปใน `CartContext.Provider` เพื่อให้ทุกหน้าที่เรียก `useCartContext()` ใช้ state และฟังก์ชันชุดเดียวกัน
+
+---
+
+## เหตุผลที่เลือกใช้
+
+Logic การจัดการตะกร้า (โหลด/บันทึก localStorage, เพิ่ม/ลบ/แก้จำนวนสินค้า, เช็ค MAX_QUANTITY, คำนวณราคารวม) มีความซับซ้อนและใช้ Hook หลายตัวร่วมกัน ถ้าเขียนไว้ใน Component โดยตรงจะทำให้ไฟล์ยาวและอ่านยาก จึงแยกออกมาเป็น Custom Hook เพื่อให้ `page.tsx` และ `cart/page.tsx` โฟกัสที่ UI อย่างเดียว
+
+---
+
+## ข้อดี
+
+- รวม Logic ที่ซับซ้อนไว้ที่เดียว ไม่ต้องเขียนซ้ำในหลาย Component
+- ทดสอบ (test) Logic แยกจาก UI ได้ง่ายกว่า
+- Component ที่เรียกใช้อ่านง่ายขึ้น เพราะไม่ต้องเห็น Logic เบื้องหลังทั้งหมด
+
+---
+
+## ข้อจำกัด
+
+- ถ้า Custom Hook ทำหลายอย่างเกินไปในตัวเดียว (เหมือน useCart ที่นี่ที่รวมทั้ง state, localStorage, warning, คำนวณราคา) จะเริ่มอ่านยากขึ้นเมื่อโปรเจกต์ใหญ่ขึ้น อาจต้องแยกย่อยเพิ่มในอนาคต
+- ต้องระวังชื่อ Hook ให้ขึ้นต้นด้วย `use` เสมอ ไม่งั้น React จะไม่รู้ว่านี่คือ Hook (เช่น เรื่อง Rule of Hooks)
+
+---
+
+# คำถามอภิปราย (Discussion Questions)
+
+โปรเจกต์: Coffee Shop Ordering System
+สมาชิก: 673450037-2 naris, 673450206-5 irada
+
+---
+
+## 1. useReducer vs useState ต่างกันอย่างไร แล้วทำไมโปรเจกต์นี้ถึงใช้ useReducer จัดการตะกร้าสินค้า
+
+`useState` เหมาะกับ State ที่เรียบง่าย เปลี่ยนแปลงตรงไปตรงมา เช่น ค่าค้นหา (`search`) หรือหมวดหมู่ที่เลือก (`category`) ในโปรเจกต์นี้
+
+`useReducer` เหมาะกับ State ที่มีหลาย Action และ Logic การเปลี่ยนแปลงซับซ้อนกว่า เช่นตะกร้าสินค้าที่ต้องรองรับหลาย Action: `ADD_TO_CART`, `REMOVE_FROM_CART`, `INCREASE_QUANTITY`, `DECREASE_QUANTITY`, `LOAD_CART`, `CLEAR_CART` แต่ละ Action มีเงื่อนไขของตัวเอง (เช่น เช็ค `MAX_QUANTITY_PER_ITEM`, สร้าง `cartItemId` จาก product + options) ถ้าใช้ `useState` เพียงอย่างเดียวจะต้องเขียนฟังก์ชันแก้ไข Array แยกจำนวนมากกระจายอยู่ใน Component ทำให้โค้ดซับซ้อนและดูแลยาก การรวม Logic ไว้ใน `cartReducer.ts` ทำให้แยก Logic ออกจาก UI ชัดเจน และเพิ่ม Action ใหม่ในอนาคต (เช่นที่เพิ่ง เพิ่ม `CLEAR_CART`) ทำได้ง่ายโดยไม่กระทบส่วนอื่น
+
+---
+
+## 2. useMemo ช่วยอะไรในโปรเจกต์นี้ และถ้าไม่ใช้จะเกิดอะไรขึ้น
+
+`useMemo` ใช้เก็บผลลัพธ์การคำนวณไว้ ไม่ต้องคำนวณใหม่ทุกครั้งที่ Component render ถ้าค่าที่อยู่ใน dependency array ไม่เปลี่ยน ในโปรเจกต์นี้ใช้กับ:
+- `totalPrice` ใน `useCart.ts` — คำนวณราคารวมของตะกร้า คำนวณใหม่เฉพาะตอน `cart` เปลี่ยน
+- `filteredProducts` ใน `page.tsx` — กรองสินค้าตามคำค้นหาและหมวดหมู่ คำนวณใหม่เฉพาะตอน `search` หรือ `category` เปลี่ยน
+
+ถ้าไม่ใช้ `useMemo` ทุกครั้งที่ Component นี้ render (ไม่ว่าจะด้วยเหตุผลอะไรก็ตาม เช่น state อื่นที่ไม่เกี่ยวข้องเปลี่ยน) ฟังก์ชัน `.reduce()` และ `.filter()` จะถูกรันซ้ำใหม่ทุกครั้ง ซึ่งถ้ารายการสินค้าหรือตะกร้ามีจำนวนมากขึ้น จะเริ่มกระทบ performance โดยไม่จำเป็น
+
+---
+
+## 3. useCallback ต่างจาก useMemo อย่างไร แล้วทำไมต้องใช้คู่กับ React.memo
+
+`useMemo` ใช้จดจำ "ค่าผลลัพธ์" จากการคำนวณ ส่วน `useCallback` ใช้จดจำ "ตัวฟังก์ชัน" เอง เพื่อไม่ให้ React สร้างฟังก์ชันใหม่ทุกครั้งที่ render (ปกติทุกครั้งที่ Component render ฟังก์ชันที่ประกาศข้างในจะถูกสร้างใหม่เสมอ ถึงแม้เนื้อหาข้างในจะเหมือนเดิมก็ตาม)
+
+เหตุผลที่ต้องใช้คู่กับ `React.memo` (เช่นที่ `ProductCard.tsx` ห่อด้วย `memo()`) คือ `React.memo` จะเช็คว่า Props ที่ส่งเข้ามาเปลี่ยนหรือไม่แบบ shallow compare ถ้าฟังก์ชันที่ส่งเป็น Prop (เช่น `onAddToCart`) ถูกสร้างใหม่ทุกครั้ง (reference ไม่เท่าเดิม) `React.memo` จะมองว่า Props เปลี่ยนเสมอ แล้ว re-render Component ลูกอยู่ดี ทำให้ `memo()` ไม่ได้ประโยชน์อะไรเลย การห่อฟังก์ชันด้วย `useCallback` จึงช่วยให้ reference คงเดิมตราบใดที่ dependency ไม่เปลี่ยน ทำให้ `React.memo` ทำงานได้ตามที่ตั้งใจจริง
+
+**ข้อสังเกตจากโค้ดจริงของโปรเจกต์นี้:** `addToCart` ใน `useCart.ts` ห่อด้วย `useCallback` แล้ว แต่ตอนส่งเข้า `ProductCard` ใน `page.tsx` มันถูกห่ออีกชั้นด้วย `handleAddToCart` ซึ่งเป็นฟังก์ชันธรรมดา ไม่ได้เป็น `useCallback` ทำให้ reference ของ `handleAddToCart` เปลี่ยนทุกครั้งที่ `page.tsx` render อยู่ดี และ `React.memo` ที่ `ProductCard` จึงยังไม่ได้ประโยชน์เต็มที่ตามทฤษฎีข้างต้น เป็นตัวอย่างที่ดีว่าทำไมต้องห่อ `useCallback` ให้ครบทุกชั้นของฟังก์ชันที่ส่งต่อกัน ไม่ใช่แค่ชั้นแรก
+
+---
+
+## 4. useContext ต่างจากการส่ง Props (Props Drilling) อย่างไร
+
+Props Drilling คือการส่งข้อมูลจาก Component แม่ลงไปให้ Component ลูกที่อยู่ลึกหลายชั้น โดยต้องส่งผ่าน Props ทีละชั้นแม้ Component ระหว่างทางจะไม่ได้ใช้ข้อมูลนั้นเลยก็ตาม ยิ่งโครงสร้างลึกเท่าไหร่ ยิ่งต้องส่งผ่านมากขึ้น โค้ดจะรกและแก้ไขยาก
+
+`useContext` แก้ปัญหานี้โดยสร้าง "จุดกลาง" (Context) ที่ Component ไหนก็ได้ที่อยู่ภายใน `Provider` เดียวกัน สามารถดึงข้อมูลไปใช้ได้โดยตรง โดยไม่ต้องส่งผ่าน Props ทีละชั้น
+
+ในโปรเจกต์นี้ `CartContext` ห่อทั้งแอปไว้ใน `app/layout.tsx` ทำให้ทั้งหน้าเมนู (`page.tsx`) และหน้าสรุปคำสั่งซื้อ (`cart/page.tsx`) ดึงข้อมูลตะกร้าสินค้าผ่าน `useCartContext()` ได้ทันที โดยไม่ต้องส่ง state ตะกร้าข้ามหน้าผ่าน Props เลย ซึ่งถ้าใช้ Props Drilling จะทำไม่ได้อยู่แล้ว เพราะเป็นคนละหน้า (คนละ route) กัน ไม่ได้อยู่ใน Component tree เดียวกันตั้งแต่ต้น
